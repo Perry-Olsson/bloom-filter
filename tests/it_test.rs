@@ -10,7 +10,7 @@ fn test_hash_map() {
 
     let hits = 10000;
     let misses = 10000;
-    let (found, query_duration, _) = measure(|| query_hash_map(&map, hits, misses));
+    let (found, query_duration, _) = measure(|| query_hash_map(|key| map.contains_key(key), hits, misses));
     println!(
         "HashMap query: {} found ({} hit attempts + {} misses) | duration: {:?}",
         found,
@@ -30,8 +30,8 @@ fn build_hash_map(username_count: usize) -> HashMap<String, usize> {
     map
 }
 
-fn query_hash_map<T: StringSet>(
-    map: &T,
+fn query_hash_map<F: Fn(&String) -> bool>(
+    contains_key: F,
     hits: usize,
     misses: usize,
 ) -> usize {
@@ -52,7 +52,7 @@ fn query_hash_map<T: StringSet>(
         }
 
         let val = &get_value(&mut rng);
-        if map.contains_key(val) {
+        if contains_key(val) {
             found += 1;
         }
     }
@@ -65,16 +65,6 @@ fn get_hit<T: Rng>(rng: &mut T) -> String {
 
 fn get_miss<T: Rng>(rng: &mut T) -> String {
     (0..10).map(|_| rng.gen_range('a'..='z')).collect()
-}
-
-trait StringSet {
-    fn contains_key(&self, key: &str) -> bool;
-}
-
-impl StringSet for HashMap<String, usize> {
-    fn contains_key(&self, key: &str) -> bool {
-        self.contains_key(key)
-    }
 }
 
 struct UsernameGenerator {
