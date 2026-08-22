@@ -30,8 +30,18 @@ fn build_hash_map(username_count: usize) -> HashMap<String, usize> {
     map
 }
 
-fn query_hash_map(
-    map: &HashMap<String, usize>,
+trait StringSet {
+    fn contains_key(&self, key: &str) -> bool;
+}
+
+impl StringSet for HashMap<String, usize> {
+    fn contains_key(&self, key: &str) -> bool {
+        self.contains_key(key)
+    }
+}
+
+fn query_hash_map<T: StringSet>(
+    map: &T,
     hits: usize,
     misses: usize,
 ) -> usize {
