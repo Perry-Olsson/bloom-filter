@@ -32,23 +32,20 @@ fn build_hash_map(username_count: usize) -> HashMap<String, usize> {
 
 fn query_hash_map<F: Fn(&String) -> bool>(
     contains_key: F,
-    hits: usize,
-    misses: usize,
+    mut hits: usize,
+    mut misses: usize,
 ) -> usize {
     let mut rng = thread_rng();
-    let mut hits_count = hits;
-    let mut misses_count = misses;
-
     let mut found = 0;
-    while hits_count > 0 || misses_count > 0 {
+    while hits > 0 || misses > 0 {
         let val: f64 = rng.gen_range(0.0..=1.0);
         let get_value: fn(&mut ThreadRng) -> String;
-        if hits_count != 0 && (val > 0.5 || misses_count == 0) {
+        if hits != 0 && (val > 0.5 || misses == 0) {
             get_value = get_hit;
-            hits_count -= 1;
+            hits -= 1;
         } else  {
             get_value = get_miss;
-            misses_count -= 1;
+            misses -= 1;
         }
 
         let val = &get_value(&mut rng);
