@@ -4,12 +4,12 @@ use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
 
 #[test]
 fn test_hash_map() {
-    let (map, duration, memory) = measure(|| build_hash_map(2000));
-    println!("HashMap build: {:?} | memory: {} bytes", duration, memory);
+    let (map, duration, memory) = measure(|| build_hash_map(20000));
+    println!("HashMap build: {:?} | memory: {} KB", duration, memory / 1000);
     assert!(!map.is_empty());
 
-    let hits = 10;
-    let misses = 10;
+    let hits = 10000;
+    let misses = 10000;
     let (found, query_duration, _) = measure(|| query_hash_map(&map, hits, misses));
     println!(
         "HashMap query: {} found ({} hit attempts + {} misses) | duration: {:?}",
@@ -28,16 +28,6 @@ fn build_hash_map(username_count: usize) -> HashMap<String, usize> {
         *map.entry(username).or_insert(0) += 1;
     }
     map
-}
-
-trait StringSet {
-    fn contains_key(&self, key: &str) -> bool;
-}
-
-impl StringSet for HashMap<String, usize> {
-    fn contains_key(&self, key: &str) -> bool {
-        self.contains_key(key)
-    }
 }
 
 fn query_hash_map<T: StringSet>(
@@ -75,6 +65,16 @@ fn get_hit<T: Rng>(rng: &mut T) -> String {
 
 fn get_miss<T: Rng>(rng: &mut T) -> String {
     (0..10).map(|_| rng.gen_range('a'..='z')).collect()
+}
+
+trait StringSet {
+    fn contains_key(&self, key: &str) -> bool;
+}
+
+impl StringSet for HashMap<String, usize> {
+    fn contains_key(&self, key: &str) -> bool {
+        self.contains_key(key)
+    }
 }
 
 struct UsernameGenerator {
