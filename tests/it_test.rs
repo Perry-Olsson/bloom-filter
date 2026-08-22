@@ -1,8 +1,19 @@
-use std::{collections::HashMap, sync::LazyLock};
+use std::{collections::HashMap, sync::LazyLock, time::Instant};
+use deepsize::DeepSizeOf;
 
 #[test]
 fn test_hash_map() {
-    let map = build_hash_map(2000);
+    let (map, duration, memory) = benchmark_build(2000);
+    println!("HashMap build: {:?} | memory: {} bytes", duration, memory);
+    assert!(!map.is_empty());
+}
+
+fn benchmark_build(username_count: usize) -> (HashMap<String, usize>, std::time::Duration, usize) {
+    let start = Instant::now();
+    let map = build_hash_map(username_count);
+    let duration = start.elapsed();
+    let memory = map.deep_size_of();
+    (map, duration, memory)
 }
 
 fn build_hash_map(username_count: usize) -> HashMap<String, usize> {
