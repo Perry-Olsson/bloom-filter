@@ -8,18 +8,6 @@ fn test_hash_map() {
     assert!(!map.is_empty());
 }
 
-fn measure<F, T>(executable: F) -> (T, std::time::Duration, usize)
-where 
-    F: FnOnce() -> T,
-    T: DeepSizeOf
-{
-    let start = Instant::now();
-    let map = executable();
-    let duration = start.elapsed();
-    let memory = map.deep_size_of();
-    (map, duration, memory)
-}
-
 fn build_hash_map(username_count: usize) -> HashMap<String, usize> {
     let mut map = HashMap::new();
     let mut generator = UsernameGenerator::new();
@@ -65,3 +53,15 @@ static USERNAMES: LazyLock<Vec<String>> = LazyLock::new(|| {
         .map(|s| s.to_string())
         .collect()
 });
+
+fn measure<F, T>(executable: F) -> (T, std::time::Duration, usize)
+where 
+    F: FnOnce() -> T,
+    T: DeepSizeOf
+{
+    let start = Instant::now();
+    let map = executable();
+    let duration = start.elapsed();
+    let memory = map.deep_size_of();
+    (map, duration, memory)
+}
