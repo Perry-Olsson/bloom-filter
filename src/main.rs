@@ -1,5 +1,5 @@
+use bloom_filter::run;
+
 fn main() {
-    println!("Hello, world!");
+    run();
 }
-
-

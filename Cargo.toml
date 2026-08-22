@@ -5,6 +5,4 @@ edition = "2024"
 
 [dependencies]
 deepsize = "0.2"
-
-[dev-dependencies]
 rand = "0.8"
