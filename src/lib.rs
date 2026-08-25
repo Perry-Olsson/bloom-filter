@@ -4,24 +4,25 @@ use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
 
 pub fn run() {
     let (map, duration, memory) = measure(|| build_hash_map(2_000_000));
-    println!("HashMap build: {:?} | memory: {} KB", duration, memory / 1000);
+    println!("HashMap build: {:?} | memory: {} MB", duration, memory / 1_000_000);
     assert!(!map.is_empty());
 
-    let hits = 10000;
-    let misses = 10000;
-    let (found, query_duration, _) = measure(|| query_hash_map(|key| map.contains_key(key), hits, misses));
-    println!(
-        "HashMap query: {} found ({} hit attempts + {} misses) | duration: {:?}",
-        found,
-        hits,
-        misses,
-        query_duration
-    );
-    //
-    // let (_, time, mem) = measure(|| query_hash_map_only_measure_lookup(|key| map.contains_key(key), hits, misses));
-    // println!("Time: {:?}, mem: {}", time, mem);
+    let hits = 1000000;
+    let misses = 1000000;
+    // let (found, query_duration, _) = measure(|| query_hash_map(|key| map.contains_key(key), hits, misses));
+    // println!(
+    //     "HashMap query: {} found ({} hit attempts + {} misses) | duration: {:?}",
+    //     found,
+    //     hits,
+    //     misses,
+    //     query_duration
+    // );
+
+    let (found, time, mem) = measure(|| query_hash_map_only_measure_lookup(|key| map.contains_key(key), hits, misses));
+    println!("Found: {}, Time: {:?}, mem: {}", found, time, mem);
 }
 
+#[allow(dead_code)]
 pub fn build_hash_map(username_count: usize) -> HashMap<String, usize> {
     let mut map = HashMap::new();
     let mut generator = UsernameGenerator::new();
