@@ -7,8 +7,8 @@ pub fn run() {
     println!("HashMap build: {:?} | memory: {} MB", duration, memory / 1_000_000);
     assert!(!map.is_empty());
 
-    let hits = 1000000;
-    let misses = 1000000;
+    let hits = 10_000_000;
+    let misses = 10_000_000;
     // let (found, query_duration, _) = measure(|| query_hash_map(|key| map.contains_key(key), hits, misses));
     // println!(
     //     "HashMap query: {} found ({} hit attempts + {} misses) | duration: {:?}",
@@ -56,8 +56,8 @@ fn query_hash_map_only_measure_lookup<F: Fn(&String) -> bool>(
     }
     let (found, time, _) = measure(|| {
         let mut found = 0;
-        for val in values {
-            if contains_key(&val) {
+        for val in &values {
+            if contains_key(val) {
                 found += 1;
             }
         }
