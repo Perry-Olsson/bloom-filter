@@ -18,7 +18,7 @@ pub fn run() {
     //     query_duration
     // );
 
-    let (found, time, mem) = measure(|| query_hash_map_only_measure_lookup(|key| map.contains_key(key), hits, misses));
+    let (found, time, mem) = measure(|| measure_key_checks(|key| map.contains_key(key), hits, misses));
     println!("Found: {}, Time: {:?}, mem: {}", found, time, mem);
 }
 
@@ -34,7 +34,7 @@ pub fn build_hash_map(username_count: usize) -> HashMap<String, usize> {
 }
 
 #[allow(dead_code)]
-fn query_hash_map_only_measure_lookup<F: Fn(&String) -> bool>(
+fn measure_key_checks<F: Fn(&String) -> bool>(
     contains_key: F,
     mut hits: usize,
     mut misses: usize,

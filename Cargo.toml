@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 deepsize = "0.2"
+dhat = "0.3.3"
 rand = "0.8"
 
 [profile.release]
