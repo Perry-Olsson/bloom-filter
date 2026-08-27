@@ -10,3 +10,6 @@ rand = "0.8"
 
 [profile.release]
 debug = true
+
+[features]
+dhat_profiler = []

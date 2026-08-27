@@ -3,22 +3,27 @@ use deepsize::DeepSizeOf;
 use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
 
 pub fn run() {
-    let (map, duration, memory) = measure(|| build_hash_map(2_000_000));
+    let size = Size {
+        keys: 2_000_000,
+        hits: 2_000_000,
+        misses: 2_000_000
+    };
+
+    run_hash_map(size);
+}
+
+pub struct Size {
+    keys: usize,
+    hits: usize,
+    misses: usize
+}
+
+pub fn run_hash_map(size: Size) {
+    let (map, duration, memory) = measure(|| build_hash_map(size.keys));
     println!("HashMap build: {:?} | memory: {} MB", duration, memory / 1_000_000);
     assert!(!map.is_empty());
 
-    let hits = 10_000_000;
-    let misses = 10_000_000;
-    // let (found, query_duration, _) = measure(|| query_hash_map(|key| map.contains_key(key), hits, misses));
-    // println!(
-    //     "HashMap query: {} found ({} hit attempts + {} misses) | duration: {:?}",
-    //     found,
-    //     hits,
-    //     misses,
-    //     query_duration
-    // );
-
-    let (found, time, mem) = measure(|| measure_key_checks(|key| map.contains_key(key), hits, misses));
+    let (found, time, mem) = measure(|| measure_key_checks(|key| map.contains_key(key), size.hits, size.misses));
     println!("Found: {}, Time: {:?}, mem: {}", found, time, mem);
 }
 
@@ -68,6 +73,7 @@ fn measure_key_checks<F: Fn(&String) -> bool>(
     found
 }
 
+#[allow(dead_code)]
 fn query_hash_map<F: Fn(&String) -> bool>(
     contains_key: F,
     mut hits: usize,
