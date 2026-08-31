@@ -23,8 +23,8 @@ pub fn run_hash_map(size: Size) {
     println!("HashMap build: {:?} | memory: {} MB", duration, memory / 1_000_000);
     assert!(!map.is_empty());
 
-    let (found, time, mem) = measure(|| measure_key_checks(|key| map.contains_key(key), size.hits, size.misses));
-    println!("Found: {}, Time: {:?}, mem: {}", found, time, mem);
+    let (found, time, _) = measure(|| measure_key_checks(|key| map.contains_key(key), size.hits, size.misses));
+    println!("Found: {}, Time: {:?}", found, time);
 }
 
 #[allow(dead_code)]
