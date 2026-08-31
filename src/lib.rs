@@ -4,7 +4,7 @@ use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
 
 pub fn run() {
     let size = Size {
-        keys: 20_000_000,
+        keys: 2_000_000,
         hits: 2_000_000,
         misses: 2_000_000
     };
@@ -24,7 +24,13 @@ pub fn run_hash_map(size: Size) {
     assert!(!map.is_empty());
 
     let (found, time, _) = measure(|| measure_key_checks(|key| map.contains_key(key), size.hits, size.misses));
-    println!("Found: {}, Time: {:?}", found, time);
+    println!(
+        "Expected hits: {}, Actual hits: {}, False Positve Percentage: {}, Time: {:?}",
+        size.hits,
+        found,
+        format!("{}%", (found - size.hits) / size.hits),
+        time
+    );
 }
 
 #[allow(dead_code)]
