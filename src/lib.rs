@@ -4,7 +4,7 @@ use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
 
 pub fn run() {
     let size = Size {
-        keys: 2_000_000,
+        keys: 20_000_000,
         hits: 2_000_000,
         misses: 2_000_000
     };

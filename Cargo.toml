@@ -5,11 +5,14 @@ edition = "2024"
 
 [dependencies]
 deepsize = "0.2"
-dhat = "0.3.3"
 rand = "0.8"
+
+dhat = { version = "0.3.3", optional = true }
+tikv-jemallocator = { version = "0.5", optional = true, features = ["profiling", "unprefixed_malloc_on_supported_platforms"] }
 
 [profile.release]
 debug = true
 
 [features]
-dhat_profiler = []
+dhat_profiler = ["dep:dhat"]
+jemalloc = ["dep:tikv-jemallocator"]
