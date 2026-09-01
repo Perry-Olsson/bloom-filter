@@ -40,7 +40,7 @@ pub fn run_hash_map(size: Size) {
 }
 
 #[allow(dead_code)]
-fn build_set<T: Set<String> + DeepSizeOf>(set: &mut T, username_count: usize) -> (usize, usize) {
+pub fn build_set<T: Set<String> + DeepSizeOf>(set: &mut T, username_count: usize) -> (usize, usize) {
     let mut generator = UsernameGenerator::new();
     let mut total_element_size = 0;
     for _ in 0..username_count {
@@ -168,7 +168,7 @@ where
     (map, duration)
 }
 
-trait Set<K> {
+pub trait Set<K> {
     fn add_key(&mut self, key: K);
 }
 
