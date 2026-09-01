@@ -22,12 +22,11 @@ pub fn run_hash_map(size: Size) {
     let mut map: HashMap<String, usize> = HashMap::new();
     let ((total_element_size, map_size), duration) = measure(|| build_set(&mut map, size.keys));
     println!(
-        "HashMap build: {:?} | total element size: {} MB | set size: {} MB",
+        "HashMap build duration: {:?} | total element size: {} MB | hash map size: {} MB",
         duration,
         total_element_size / 1_000_000,
-        map_size
+        map_size / 1_000_000
     );
-    println!("deep size of: {}", map.deep_size_of());
     assert!(!map.is_empty());
 
     let (found, time) = measure(|| measure_key_checks(|key| map.contains_key(key), size.hits, size.misses));
@@ -49,7 +48,7 @@ fn build_set<T: Set<String> + DeepSizeOf>(set: &mut T, username_count: usize) ->
         total_element_size += username.deep_size_of();
         set.add_key(username);
     }
-    (total_element_size, set.deep_size_of())
+    (total_element_size, (*set).deep_size_of())
 }
 
 #[allow(dead_code)]
