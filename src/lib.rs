@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::LazyLock, time::Instant};
+use std::{collections::HashMap, hash::Hash, sync::LazyLock, time::Instant};
 use deepsize::DeepSizeOf;
 use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
 
@@ -19,11 +19,18 @@ pub struct Size {
 }
 
 pub fn run_hash_map(size: Size) {
-    let (map, duration, memory) = measure(|| build_hash_map(size.keys));
-    println!("HashMap build: {:?} | memory: {} MB", duration, memory / 1_000_000);
+    let mut map: HashMap<String, usize> = HashMap::new();
+    let ((total_element_size, map_size), duration) = measure(|| build_set(&mut map, size.keys));
+    println!(
+        "HashMap build: {:?} | total element size: {} MB | set size: {} MB",
+        duration,
+        total_element_size / 1_000_000,
+        map_size
+    );
+    println!("deep size of: {}", map.deep_size_of());
     assert!(!map.is_empty());
 
-    let (found, time, _) = measure(|| measure_key_checks(|key| map.contains_key(key), size.hits, size.misses));
+    let (found, time) = measure(|| measure_key_checks(|key| map.contains_key(key), size.hits, size.misses));
     println!(
         "Expected hits: {}, Actual hits: {}, False Positve Percentage: {}, Time: {:?}",
         size.hits,
@@ -34,14 +41,15 @@ pub fn run_hash_map(size: Size) {
 }
 
 #[allow(dead_code)]
-pub fn build_hash_map(username_count: usize) -> HashMap<String, usize> {
-    let mut map = HashMap::new();
+fn build_set<T: Set<String> + DeepSizeOf>(set: &mut T, username_count: usize) -> (usize, usize) {
     let mut generator = UsernameGenerator::new();
+    let mut total_element_size = 0;
     for _ in 0..username_count {
         let username = generator.next();
-        *map.entry(username).or_insert(0) += 1;
+        total_element_size += username.deep_size_of();
+        set.add_key(username);
     }
-    map
+    (total_element_size, set.deep_size_of())
 }
 
 #[allow(dead_code)]
@@ -65,7 +73,7 @@ fn measure_key_checks<F: Fn(&String) -> bool>(
 
         values.push(get_value(&mut rng));
     }
-    let (found, time, _) = measure(|| {
+    let (found, time) = measure(|| {
         let mut found = 0;
         for val in &values {
             if contains_key(val) {
@@ -150,7 +158,7 @@ static USERNAMES: LazyLock<Vec<String>> = LazyLock::new(|| {
         .collect()
 });
 
-fn measure<F, T>(executable: F) -> (T, std::time::Duration, usize)
+fn measure<F, T>(executable: F) -> (T, std::time::Duration)
 where 
     F: FnOnce() -> T,
     T: DeepSizeOf
@@ -158,6 +166,15 @@ where
     let start = Instant::now();
     let map = executable();
     let duration = start.elapsed();
-    let memory = map.deep_size_of();
-    (map, duration, memory)
+    (map, duration)
+}
+
+trait Set<K> {
+    fn add_key(&mut self, key: K);
+}
+
+impl<K: Eq + Hash> Set<K> for HashMap<K, usize> {
+    fn add_key(&mut self, key: K) {
+        self.entry(key).or_insert(1);
+    }
 }
