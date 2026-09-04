@@ -18,8 +18,7 @@ pub struct Size {
 }
 
 pub fn run_finger_print_hash(size: &Size) {
-    let hasher = DefaultHasher::new();
-    let map = FingerPrintHash::new(hasher);
+    let map = FingerPrintHash::new();
     run_benchmark(size, map, "FingerPrintHash");
 }
 
@@ -192,22 +191,21 @@ impl<K: Eq + Hash> Set<K> for HashMap<K, usize> {
     }
 }
 
-struct FingerPrintHash<T: Hasher> {
-    hasher: T,
+struct FingerPrintHash {
     finger_prints: HashSet<u64>
 }
 
-impl<T: Hasher> FingerPrintHash<T> {
-    fn new(hasher: T) -> FingerPrintHash<T> {
+impl FingerPrintHash {
+    fn new() -> FingerPrintHash {
         FingerPrintHash {
-            hasher,
             finger_prints: HashSet::new()
         }
     }
 
     fn contains_key<K: Eq + Hash>(&mut self, key: &K) -> bool {
-        key.hash(&mut self.hasher);
-        self.finger_prints.contains(&self.hasher.finish())
+        let mut hasher = DefaultHasher::new();
+        key.hash(&mut hasher);
+        self.finger_prints.contains(&hasher.finish())
     }
 
     fn is_empty(&self) -> bool {
@@ -215,16 +213,17 @@ impl<T: Hasher> FingerPrintHash<T> {
     }
 }
 
-impl<T: Hasher> DeepSizeOf for FingerPrintHash<T> {
+impl DeepSizeOf for FingerPrintHash {
     fn deep_size_of_children(&self, _: &mut deepsize::Context) -> usize {
         self.finger_prints.deep_size_of() + 8
     }
 }
 
-impl<T: Hasher, K: Eq + Hash> Set<K> for FingerPrintHash<T> {
+impl<K: Eq + Hash> Set<K> for FingerPrintHash {
     fn add_key(&mut self, key: K) {
-        key.hash(&mut self.hasher);
-        self.finger_prints.insert(self.hasher.finish());
+        let mut hasher = DefaultHasher::new();
+        key.hash(&mut hasher);
+        self.finger_prints.insert(hasher.finish());
     }
 
     fn contains(&mut self, key: &K) -> bool {
