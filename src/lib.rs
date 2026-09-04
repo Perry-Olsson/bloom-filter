@@ -1,4 +1,4 @@
-use std::{collections::HashMap, hash::Hash, sync::LazyLock, time::Instant};
+use std::{collections::{HashMap, HashSet}, hash::{DefaultHasher, Hash, Hasher}, sync::LazyLock, time::Instant};
 use deepsize::DeepSizeOf;
 use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
 
@@ -9,7 +9,8 @@ pub fn run() {
         misses: 2_000_000
     };
 
-    run_hash_map(size);
+    run_hash_map(&size);
+    run_finger_print_hash(&size);
 }
 
 pub struct Size {
@@ -18,7 +19,29 @@ pub struct Size {
     misses: usize
 }
 
-pub fn run_hash_map(size: Size) {
+pub fn run_finger_print_hash(size: &Size) {
+    let hasher = DefaultHasher::new();
+    let mut map = FingerPrintHash::new(hasher);
+    let ((total_element_size, map_size), duration) = measure(|| build_set(&mut map, size.keys));
+    println!(
+        "HashMap build duration: {:?} | total element size: {} MB | hash map size: {} MB",
+        duration,
+        total_element_size / 1_000_000,
+        map_size / 1_000_000
+    );
+    assert!(!map.is_empty());
+
+    let (found, time) = measure(|| measure_key_checks(|key| map.contains_key(key), size.hits, size.misses));
+    println!(
+        "Expected hits: {}, Actual hits: {}, False Positve Percentage: {}, Time: {:?}",
+        size.hits,
+        found,
+        format!("{}%", (found - size.hits) / size.hits),
+        time
+    );
+}
+
+pub fn run_hash_map(size: &Size) {
     let mut map: HashMap<String, usize> = HashMap::new();
     let ((total_element_size, map_size), duration) = measure(|| build_set(&mut map, size.keys));
     println!(
@@ -52,8 +75,8 @@ pub fn build_set<T: Set<String> + DeepSizeOf>(set: &mut T, username_count: usize
 }
 
 #[allow(dead_code)]
-fn measure_key_checks<F: Fn(&String) -> bool>(
-    contains_key: F,
+fn measure_key_checks<F: FnMut(&String) -> bool>(
+    mut contains_key: F,
     mut hits: usize,
     mut misses: usize,
 ) -> usize {
@@ -175,5 +198,43 @@ pub trait Set<K> {
 impl<K: Eq + Hash> Set<K> for HashMap<K, usize> {
     fn add_key(&mut self, key: K) {
         self.entry(key).or_insert(1);
+    }
+}
+
+struct FingerPrintHash<T: Hasher> {
+    hasher: T,
+    finger_prints: HashSet<u64>
+}
+
+impl<T: Hasher> FingerPrintHash<T> {
+    fn new(hasher: T) -> FingerPrintHash<T> {
+        FingerPrintHash {
+            hasher,
+            finger_prints: HashSet::new()
+        }
+    }
+
+    fn contains_key<K: Eq + Hash>(&mut self, key: K) -> bool {
+        key.hash(&mut self.hasher);
+        self.finger_prints.contains(&self.hasher.finish())
+    }
+
+    fn is_empty(&self) -> bool {
+        self.finger_prints.is_empty()
+    }
+}
+
+impl<T: Hasher> DeepSizeOf for FingerPrintHash<T> {
+    fn deep_size_of_children(&self, _: &mut deepsize::Context) -> usize {
+        self.finger_prints.deep_size_of() + 8
+    }
+}
+
+impl<T: Hasher, K: Eq + Hash> Set<K> for FingerPrintHash<T> {
+    fn add_key(&mut self, key: K) {
+        key.hash(&mut self.hasher);
+        let tmp = hasher.finish();
+        tmp.hash(&mut self.hasher)
+        self.finger_prints.insert(self.hasher.finish());
     }
 }
