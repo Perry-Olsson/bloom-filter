@@ -215,7 +215,7 @@ impl FingerPrintHash {
 
 impl DeepSizeOf for FingerPrintHash {
     fn deep_size_of_children(&self, _: &mut deepsize::Context) -> usize {
-        self.finger_prints.deep_size_of() + 8
+        self.finger_prints.deep_size_of()
     }
 }
 
