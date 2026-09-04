@@ -21,38 +21,27 @@ pub struct Size {
 
 pub fn run_finger_print_hash(size: &Size) {
     let hasher = DefaultHasher::new();
-    let mut map = FingerPrintHash::new(hasher);
-    let ((total_element_size, map_size), duration) = measure(|| build_set(&mut map, size.keys));
-    println!(
-        "HashMap build duration: {:?} | total element size: {} MB | hash map size: {} MB",
-        duration,
-        total_element_size / 1_000_000,
-        map_size / 1_000_000
-    );
-    assert!(!map.is_empty());
-
-    let (found, time) = measure(|| measure_key_checks(|key| map.contains_key(key), size.hits, size.misses));
-    println!(
-        "Expected hits: {}, Actual hits: {}, False Positve Percentage: {}, Time: {:?}",
-        size.hits,
-        found,
-        format!("{}%", (found - size.hits) / size.hits),
-        time
-    );
+    let map = FingerPrintHash::new(hasher);
+    run_benchmark(size, map, "FingerPrintHash");
 }
 
 pub fn run_hash_map(size: &Size) {
-    let mut map: HashMap<String, usize> = HashMap::new();
+    let map: HashMap<String, usize> = HashMap::new();
+    run_benchmark(size, map, "HashMap");
+}
+
+pub fn run_benchmark<T: Set<String> + DeepSizeOf>(size: &Size, mut map: T, name: &str) {
     let ((total_element_size, map_size), duration) = measure(|| build_set(&mut map, size.keys));
     println!(
-        "HashMap build duration: {:?} | total element size: {} MB | hash map size: {} MB",
+        "{} build duration: {:?} | total element size: {} MB | hash map size: {} MB",
+        name, 
         duration,
         total_element_size / 1_000_000,
         map_size / 1_000_000
     );
-    assert!(!map.is_empty());
+    assert!(!map.empty());
 
-    let (found, time) = measure(|| measure_key_checks(|key| map.contains_key(key), size.hits, size.misses));
+    let (found, time) = measure(|| measure_key_checks(|key| map.contains(key), size.hits, size.misses));
     println!(
         "Expected hits: {}, Actual hits: {}, False Positve Percentage: {}, Time: {:?}",
         size.hits,
@@ -193,11 +182,23 @@ where
 
 pub trait Set<K> {
     fn add_key(&mut self, key: K);
+    
+    fn contains(&mut self, key: &K) -> bool;
+
+    fn empty(&mut self) -> bool;
 }
 
 impl<K: Eq + Hash> Set<K> for HashMap<K, usize> {
     fn add_key(&mut self, key: K) {
         self.entry(key).or_insert(1);
+    }
+
+    fn contains(&mut self, key: &K) -> bool {
+        self.contains_key(key)
+    }
+
+    fn empty(&mut self) -> bool {
+        self.is_empty()
     }
 }
 
@@ -233,8 +234,14 @@ impl<T: Hasher> DeepSizeOf for FingerPrintHash<T> {
 impl<T: Hasher, K: Eq + Hash> Set<K> for FingerPrintHash<T> {
     fn add_key(&mut self, key: K) {
         key.hash(&mut self.hasher);
-        let tmp = hasher.finish();
-        tmp.hash(&mut self.hasher)
         self.finger_prints.insert(self.hasher.finish());
+    }
+
+    fn contains(&mut self, key: &K) -> bool {
+        self.contains_key(key)
+    }
+
+    fn empty(&mut self) -> bool {
+        self.is_empty()
     }
 }
