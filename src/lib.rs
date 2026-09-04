@@ -228,8 +228,7 @@ impl<T: Hasher, K: Eq + Hash> Set<K> for FingerPrintHash<T> {
     }
 
     fn contains(&mut self, key: &K) -> bool {
-        key.hash(&mut self.hasher);
-        self.finger_prints.contains(&self.hasher.finish())
+        self.contains_key(key)
     }
 
     fn empty(&mut self) -> bool {
