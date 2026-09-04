@@ -13,9 +13,9 @@ fn main() {
     let _profiler = dhat::Profiler::new_heap();
 
     let size = Size {
-        keys: 20000,
-        hits: 20000,
-        misses: 20000 
+        keys: 2000000,
+        hits: 2000000,
+        misses: 2000000 
     };
 
     bloom_filter::run(size);
