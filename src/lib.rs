@@ -1,22 +1,20 @@
-use std::{collections::{HashMap, HashSet}, hash::{DefaultHasher, Hash, Hasher}, sync::LazyLock, time::Instant};
+pub mod util;
+
+use std::{collections::{HashMap, HashSet}, hash::{DefaultHasher, Hash, Hasher}, time::Instant};
 use deepsize::DeepSizeOf;
 use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
 
-pub fn run() {
-    let size = Size {
-        keys: 2_000_000,
-        hits: 2_000_000,
-        misses: 2_000_000
-    };
+use util::USERNAMES;
 
+pub fn run(size: Size) {
     run_hash_map(&size);
     run_finger_print_hash(&size);
 }
 
 pub struct Size {
-    keys: usize,
-    hits: usize,
-    misses: usize
+    pub keys: usize,
+    pub hits: usize,
+    pub misses: usize
 }
 
 pub fn run_finger_print_hash(size: &Size) {
@@ -33,15 +31,16 @@ pub fn run_hash_map(size: &Size) {
 pub fn run_benchmark<T: Set<String> + DeepSizeOf>(size: &Size, mut map: T, name: &str) {
     let ((total_element_size, map_size), duration) = measure(|| build_set(&mut map, size.keys));
     println!(
-        "{} build duration: {:?} | total element size: {} MB | hash map size: {} MB",
+        "{} build duration: {:?} | total element size: {} | hash map size: {} bytes",
         name, 
         duration,
-        total_element_size / 1_000_000,
-        map_size / 1_000_000
+        total_element_size,
+        map_size
     );
     assert!(!map.empty());
 
     let (found, time) = measure(|| measure_key_checks(|key| map.contains(key), size.hits, size.misses));
+    println!("{}", found);
     println!(
         "Expected hits: {}, Actual hits: {}, False Positve Percentage: {}, Time: {:?}",
         size.hits,
@@ -160,15 +159,6 @@ impl UsernameGenerator {
     }
 }
 
-static USERNAMES: LazyLock<Vec<String>> = LazyLock::new(|| {
-    std::fs::read_to_string("tests/data/names.txt")
-        .expect("Unable to read file")
-        .trim()
-        .split("\n")
-        .map(|s| s.to_string())
-        .collect()
-});
-
 fn measure<F, T>(executable: F) -> (T, std::time::Duration)
 where 
     F: FnOnce() -> T,
@@ -215,7 +205,7 @@ impl<T: Hasher> FingerPrintHash<T> {
         }
     }
 
-    fn contains_key<K: Eq + Hash>(&mut self, key: K) -> bool {
+    fn contains_key<K: Eq + Hash>(&mut self, key: &K) -> bool {
         key.hash(&mut self.hasher);
         self.finger_prints.contains(&self.hasher.finish())
     }
@@ -238,7 +228,8 @@ impl<T: Hasher, K: Eq + Hash> Set<K> for FingerPrintHash<T> {
     }
 
     fn contains(&mut self, key: &K) -> bool {
-        self.contains_key(key)
+        key.hash(&mut self.hasher);
+        self.finger_prints.contains(&self.hasher.finish())
     }
 
     fn empty(&mut self) -> bool {

@@ -1,3 +1,5 @@
+use bloom_filter::Size;
+
 #[cfg(feature = "dhat_profiler")]
 #[global_allocator]
 static ALLOC: dhat::Alloc = dhat::Alloc;
@@ -10,5 +12,11 @@ fn main() {
     #[cfg(feature = "dhat_profiler")]
     let _profiler = dhat::Profiler::new_heap();
 
-    bloom_filter::run();
+    let size = Size {
+        keys: 20000,
+        hits: 20000,
+        misses: 20000 
+    };
+
+    bloom_filter::run(size);
 }
