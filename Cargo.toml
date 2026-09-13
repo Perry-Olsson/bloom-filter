@@ -9,6 +9,7 @@ rand = "0.8"
 
 dhat = { version = "0.3.3", optional = true }
 tikv-jemallocator = { version = "0.5", optional = true, features = ["profiling", "unprefixed_malloc_on_supported_platforms"] }
+num-format = "0.4.4"
 
 [profile.release]
 debug = true

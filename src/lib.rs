@@ -2,6 +2,7 @@ pub mod util;
 
 use std::{collections::{HashMap, HashSet}, hash::{DefaultHasher, Hash, Hasher}, time::Instant};
 use deepsize::DeepSizeOf;
+use num_format::{Locale, ToFormattedString};
 use rand::{rngs::ThreadRng, seq::SliceRandom, thread_rng, Rng};
 
 use util::USERNAMES;
@@ -30,11 +31,11 @@ pub fn run_hash_map(size: &Size) {
 pub fn run_benchmark<T: Set<String> + DeepSizeOf>(size: &Size, mut map: T, name: &str) {
     let ((total_element_size, map_size), duration) = measure(|| build_set(&mut map, size.keys));
     println!(
-        "{} build duration: {:?} | total element size: {} | hash map size: {} bytes",
+        "{} build duration: {:?} | total element size: {} bytes | hash map size: {} bytes",
         name, 
         duration,
-        total_element_size,
-        map_size
+        total_element_size.en(),
+        map_size.en()
     );
     assert!(!map.empty());
 
@@ -42,8 +43,8 @@ pub fn run_benchmark<T: Set<String> + DeepSizeOf>(size: &Size, mut map: T, name:
     println!("{}", found);
     println!(
         "Expected hits: {}, Actual hits: {}, False Positve Percentage: {}, Time: {:?}",
-        size.hits,
-        found,
+        size.hits.en(),
+        found.en(),
         format!("{}%", (found - size.hits) / size.hits),
         time
     );
@@ -232,5 +233,15 @@ impl<K: Eq + Hash> Set<K> for FingerPrintHash {
 
     fn empty(&mut self) -> bool {
         self.is_empty()
+    }
+}
+
+trait Fmt<T> {
+    fn en(&self) -> String;
+}
+
+impl<T: ToFormattedString> Fmt<T> for T {
+    fn en(&self) -> String {
+        self.to_formatted_string(&Locale::en)
     }
 }
