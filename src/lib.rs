@@ -29,6 +29,7 @@ pub fn run_hash_map(size: &Size) {
 }
 
 pub fn run_benchmark<T: Set<String> + DeepSizeOf>(size: &Size, mut map: T, name: &str) {
+    println!("============================================== {} ==============================================", name);
     let ((total_element_size, map_size), duration) = measure(|| build_set(&mut map, size.keys));
     println!(
         "{} build duration: {:?} | total element size: {} bytes | hash map size: {} bytes",
@@ -48,6 +49,7 @@ pub fn run_benchmark<T: Set<String> + DeepSizeOf>(size: &Size, mut map: T, name:
         format!("{}%", (found - size.hits) / size.hits),
         time
     );
+    println!("");
 }
 
 #[allow(dead_code)]
