@@ -1,4 +1,6 @@
 pub mod util;
+mod bloom_filter;
+pub use bloom_filter::BloomFilter;
 
 use std::{collections::{HashMap, HashSet}, hash::{DefaultHasher, Hash, Hasher}};
 use deepsize::DeepSizeOf;
