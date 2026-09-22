@@ -6,7 +6,7 @@ use bloom_filter::{self, Size};
 fn test_hash_map() {
     let size = 10;
     let mut map = HashMap::new();
-    bloom_filter::build_set(&mut map, size);
+    bloom_filter::util::benchmarks::build_set(&mut map, size);
     assert_eq!(size, map.len())
 }
 
